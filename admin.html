@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GymGrowth Pro — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700;900&family=Barlow+Condensed:wght@700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #E8192C;
+  --red-dark: #B5101F;
+  --red-glow: rgba(232,25,44,0.25);
+  --black: #080808;
+  --bg: #0d0d0d;
+  --surface: #141414;
+  --surface2: #1a1a1a;
+  --surface3: #202020;
+  --border: rgba(255,255,255,0.07);
+  --border-red: rgba(232,25,44,0.3);
+  --gray: #666;
+  --gray2: #999;
+  --light: #ccc;
+  --white: #fff;
+  --green: #22c55e;
+  --gold: #F5C518;
+  --sidebar-w: 240px;
+  --header-h: 64px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--black);
+  color: var(--white);
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(232,25,44,0.4); border-radius: 10px; }
+
+/* ── LOGIN SCREEN ── */
+#login-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--black);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.login-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 60% at 50% 50%, rgba(232,25,44,0.07) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23080808'/%3E%3Crect x='0' y='0' width='1' height='40' fill='%23ffffff05'/%3E%3Crect x='0' y='0' width='40' height='1' fill='%23ffffff05'/%3E%3C/svg%3E");
+}
+.login-box {
+  position: relative; z-index: 1;
+  width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border-red);
+  border-radius: 16px;
+  padding: 48px 40px;
+  box-shadow: 0 0 80px rgba(232,25,44,0.1), 0 40px 80px rgba(0,0,0,0.6);
+}
+.login-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px; letter-spacing: 3px;
+  text-align: center; margin-bottom: 4px;
+}
+.login-logo span { color: var(--red); }
+.login-sub {
+  text-align: center; font-size: 12px; color: var(--gray2);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 36px;
+}
+.login-label {
+  display: block; font-size: 11px; font-weight: 700;
+  color: var(--gray2); letter-spacing: 1px; text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace; margin-bottom: 8px;
+}
+.login-input {
+  width: 100%; background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px; color: var(--white);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px; padding: 14px 16px;
+  outline: none; transition: border-color 0.2s;
+  letter-spacing: 3px; margin-bottom: 16px;
+}
+.login-input:focus { border-color: var(--red); }
+.login-btn {
+  width: 100%; background: var(--red); color: #fff;
+  border: none; border-radius: 8px; padding: 15px;
+  font-family: 'Barlow', sans-serif; font-size: 14px;
+  font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  cursor: pointer; transition: all 0.2s;
+}
+.login-btn:hover { background: var(--red-dark); box-shadow: 0 8px 24px var(--red-glow); }
+.login-error {
+  text-align: center; color: #ff6b7a;
+  font-size: 13px; margin-top: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  display: none;
+}
+.login-hint {
+  text-align: center; margin-top: 20px;
+  font-size: 11px; color: var(--gray);
+  font-family: 'JetBrains Mono', monospace;
+}
+.login-hint span { color: rgba(232,25,44,0.6); }
+
+/* ── MAIN LAYOUT ── */
+#app { display: none; height: 100vh; flex-direction: column; }
+#app.visible { display: flex; }
+
+/* TOPBAR */
+.topbar {
+  height: var(--header-h); flex-shrink: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  position: relative; z-index: 100;
+}
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar-logo { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 2px; }
+.topbar-logo span { color: var(--red); }
+.topbar-badge {
+  background: rgba(232,25,44,0.12); border: 1px solid var(--border-red);
+  color: var(--red); font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px;
+  border-radius: 100px; font-family: 'JetBrains Mono', monospace;
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.topbar-site-link {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--gray2); font-size: 13px; font-weight: 600;
+  text-decoration: none; transition: color 0.2s;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 8px 16px; border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+}
+.topbar-site-link:hover { color: #fff; border-color: rgba(255,255,255,0.15); }
+.save-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--red); color: #fff; border: none;
+  padding: 10px 22px; border-radius: 8px;
+  font-family: 'Barlow', sans-serif; font-weight: 700;
+  font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;
+  cursor: pointer; transition: all 0.2s;
+}
+.save-btn:hover { background: var(--red-dark); box-shadow: 0 6px 20px var(--red-glow); transform: translateY(-1px); }
+.save-btn.success { background: var(--green); }
+.save-btn .save-icon { font-size: 16px; }
+
+/* BODY */
+.app-body { display: flex; flex: 1; overflow: hidden; }
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto; padding: 20px 0;
+  display: flex; flex-direction: column;
+}
+.sidebar-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--gray);
+  padding: 14px 20px 6px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 20px; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: var(--gray2);
+  transition: all 0.15s; border-left: 2px solid transparent;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  position: relative;
+}
+.nav-item:hover { color: #fff; background: rgba(255,255,255,0.03); }
+.nav-item.active {
+  color: #fff; background: rgba(232,25,44,0.07);
+  border-left-color: var(--red);
+}
+.nav-icon { font-size: 15px; width: 20px; text-align: center; }
+.nav-badge {
+  margin-left: auto; background: rgba(232,25,44,0.15);
+  color: var(--red); font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.sidebar-footer {
+  margin-top: auto; padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--gray);
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.7;
+}
+
+/* CONTENT */
+.content {
+  flex: 1; overflow-y: auto;
+  padding: 36px 40px;
+  background: var(--black);
+}
+
+/* PANEL */
+.panel { display: none; animation: fadeIn 0.2s ease; }
+.panel.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.panel-header { margin-bottom: 32px; }
+.panel-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px; letter-spacing: 1px; margin-bottom: 4px;
+}
+.panel-desc { font-size: 14px; color: var(--gray2); line-height: 1.6; }
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 24px;
+  margin-bottom: 20px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: rgba(255,255,255,0.12); }
+.card-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--red);
+  margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.card-title::after { content: ''; flex: 1; height: 1px; background: var(--border-red); }
+
+/* FIELDS */
+.field-group { margin-bottom: 18px; }
+.field-group:last-child { margin-bottom: 0; }
+.field-label {
+  display: block; font-size: 11px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--gray2); margin-bottom: 7px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.field-hint { font-size: 11px; color: var(--gray); margin-top: 5px; font-family: 'JetBrains Mono', monospace; }
+.field-input, .field-textarea {
+  width: 100%; background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px; color: var(--white);
+  font-family: 'Barlow', sans-serif; font-size: 14px;
+  padding: 11px 14px; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  resize: vertical;
+}
+.field-input:focus, .field-textarea:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(232,25,44,0.1);
+}
+.field-textarea { min-height: 80px; line-height: 1.6; }
+
+/* GRID LAYOUTS */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+
+/* REPEATER ITEMS */
+.repeater-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 20px;
+  margin-bottom: 12px;
+  position: relative;
+}
+.repeater-item-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.repeater-item-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; color: rgba(232,25,44,0.3);
+  line-height: 1;
+}
+.repeater-item-label {
+  font-size: 12px; font-weight: 700; color: var(--gray2);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* CONTACT HIGHLIGHT */
+.contact-highlight {
+  background: linear-gradient(135deg, rgba(232,25,44,0.06), transparent);
+  border: 1px solid var(--border-red);
+  border-radius: 10px; padding: 20px 24px;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 16px;
+}
+.contact-icon { font-size: 28px; }
+.contact-note { font-size: 13px; color: var(--light); line-height: 1.6; }
+.contact-note strong { color: var(--white); display: block; margin-bottom: 2px; }
+
+/* STATUS TOAST */
+.toast {
+  position: fixed; top: 80px; right: 28px;
+  background: var(--green); color: #fff;
+  font-weight: 700; font-size: 13px; padding: 14px 20px;
+  border-radius: 8px; box-shadow: 0 8px 24px rgba(34,197,94,0.3);
+  display: flex; align-items: center; gap: 8px;
+  transform: translateX(200%); transition: transform 0.3s ease;
+  z-index: 9999; font-family: 'Barlow', sans-serif;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.toast.show { transform: translateX(0); }
+
+/* CHECKBOX ROW */
+.check-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.check-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--red); cursor: pointer; }
+.check-row label { font-size: 13px; color: var(--light); cursor: pointer; }
+
+/* PKG TABS */
+.pkg-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.pkg-tab {
+  padding: 8px 18px; border-radius: 6px; font-size: 12px;
+  font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+  cursor: pointer; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--gray2);
+  transition: all 0.2s;
+}
+.pkg-tab.active { background: rgba(232,25,44,0.12); border-color: var(--border-red); color: var(--white); }
+.pkg-panel { display: none; }
+.pkg-panel.active { display: block; }
+
+/* QUICK STATS BAR */
+.stats-bar {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 16px; margin-bottom: 32px;
+}
+.stat-pill {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px 20px;
+}
+.stat-pill-num {
+  font-family: 'Bebas Neue', sans-serif; font-size: 30px;
+  color: var(--red); line-height: 1; margin-bottom: 4px;
+}
+.stat-pill-label { font-size: 11px; color: var(--gray2); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+
+/* DIVIDER */
+.divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+/* SECTION BREAK */
+.section-break {
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px;
+  letter-spacing: 1px; color: var(--gray);
+  margin: 24px 0 16px; display: flex; align-items: center; gap: 12px;
+}
+.section-break::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* PREVIEW CHIP */
+.preview-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25);
+  color: var(--green); font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace; margin-left: 10px;
+}
+.preview-chip::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 1.5s infinite; }
+@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+@media (max-width: 900px) {
+  .sidebar { width: 60px; }
+  .nav-item span:not(.nav-icon) { display: none; }
+  .sidebar-section-label { display: none; }
+  .sidebar-footer { display: none; }
+  .nav-badge { display: none; }
+  .content { padding: 24px 20px; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .stats-bar { grid-template-columns: 1fr 1fr; }
+  .topbar { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-bg"></div>
+  <div class="login-box">
+    <div class="login-logo">Gym<span>Growth</span>Pro</div>
+    <div class="login-sub">Admin Panel · Secure Access</div>
+    <label class="login-label" for="pw-input">Password</label>
+    <input type="password" id="pw-input" class="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">🔐 Login to Admin</button>
+    <div class="login-error" id="login-error">⚠ Incorrect password. Try again.</div>
+    <div class="login-hint">Default password: <span>admin123</span></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">Gym<span>Growth</span>Pro</div>
+      <div class="topbar-badge">Admin Panel</div>
+      <span class="preview-chip">Live Sync</span>
+    </div>
+    <div class="topbar-right">
+      <a href="gymgrowth-with-admin.html" target="_blank" class="topbar-site-link">🌐 View Site</a>
+      <button class="save-btn" id="main-save-btn" onclick="saveAll()">
+        <span class="save-icon">💾</span> Save All Changes
+      </button>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="app-body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-section-label">Essential</div>
+      <div class="nav-item active" onclick="showPanel('contact',this)"><span class="nav-icon">📞</span><span>Contact Info</span></div>
+
+      <div class="sidebar-section-label">Sections</div>
+      <div class="nav-item" onclick="showPanel('hero',this)"><span class="nav-icon">🏠</span><span>Hero</span></div>
+      <div class="nav-item" onclick="showPanel('problem',this)"><span class="nav-icon">⚠️</span><span>Problem</span></div>
+      <div class="nav-item" onclick="showPanel('solution',this)"><span class="nav-icon">🔧</span><span>Solution</span></div>
+      <div class="nav-item" onclick="showPanel('features',this)"><span class="nav-icon">⭐</span><span>Features</span></div>
+      <div class="nav-item" onclick="showPanel('packages',this)"><span class="nav-icon">💰</span><span>Packages</span></div>
+      <div class="nav-item" onclick="showPanel('results',this)"><span class="nav-icon">📊</span><span>Results</span></div>
+      <div class="nav-item" onclick="showPanel('testimonials',this)"><span class="nav-icon">💬</span><span>Testimonials</span></div>
+      <div class="nav-item" onclick="showPanel('faq',this)"><span class="nav-icon">❓</span><span>FAQ</span></div>
+      <div class="nav-item" onclick="showPanel('cta',this)"><span class="nav-icon">🎯</span><span>CTA + Footer</span></div>
+
+      <div class="sidebar-footer">
+        <div>📁 gymgrowth-admin.html</div>
+        <div style="margin-top:4px;">🔗 Syncs via localStorage</div>
+        <div style="margin-top:4px;color:#E8192C;">⚙ v1.0</div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ── CONTACT ── -->
+      <div class="panel active" id="panel-contact">
+        <div class="panel-header">
+          <div class="panel-title">Contact Info</div>
+          <div class="panel-desc">Update once — phone number & WhatsApp links update across the entire website automatically.</div>
+        </div>
+
+        <div class="contact-highlight">
+          <div class="contact-icon">⚡</div>
+          <div class="contact-note">
+            <strong>Central Contact Hub</strong>
+            All call buttons, WhatsApp links, and contact display text across the whole site pull from here.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📞 Phone & WhatsApp Numbers</div>
+          <div class="grid-2">
+            <div class="field-group">
+              <label class="field-label">Phone Number (with country code)</label>
+              <input type="text" class="field-input" id="c-phone" placeholder="+919999999999">
+              <div class="field-hint">Used in tel: links. Include + and country code.</div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">WhatsApp Number (digits only)</label>
+              <input type="text" class="field-input" id="c-wa-num" placeholder="919999999999">
+              <div class="field-hint">No +, no spaces. e.g. 919876543210</div>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">WhatsApp Default Message</label>
+            <input type="text" class="field-input" id="c-wa-msg" placeholder="Hi! I want to grow my gym...">
+            <div class="field-hint">Sent when someone taps your WhatsApp button.</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">WhatsApp Sticky Button Tooltip</label>
+            <input type="text" class="field-input" id="c-wa-tooltip" placeholder="Chat with us 💬">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📋 Contact Display Text</div>
+          <div class="field-group">
+            <label class="field-label">Contact Info Line (shown below CTA buttons)</label>
+            <input type="text" class="field-input" id="c-info-line" placeholder="📞 +91 99999 99999 | 💬 WhatsApp Available | ⏰ Response within 1 hour">
+            <div class="field-hint">Shown at the bottom of the final CTA section.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── HERO ── -->
+      <div class="panel" id="panel-hero">
+        <div class="panel-header">
+          <div class="panel-title">Hero Section</div>
+          <div class="panel-desc">The first screen visitors see. Make it powerful.</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🏷️ Badge & Headline</div>
+          <div class="field-group">
+            <label class="field-label">Trust Badge Text</label>
+            <input type="text" class="field-input" id="h-badge" placeholder="🏆 Trusted by 50+ Local Gym Owners Across India">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Main Title</label>
+            <textarea class="field-textarea" id="h-title" style="min-height:100px;" placeholder="Gym Owners,\nGet [red]30–100[/red]\nNew Members [red]Every Month[/red]"></textarea>
+            <div class="field-hint">Use \n for new lines. Wrap text in [red]...[/red] to make it red.</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Subtitle / Sub-headline</label>
+            <textarea class="field-textarea" id="h-sub"></textarea>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔘 CTA Buttons</div>
+          <div class="grid-2">
+            <div class="field-group">
+              <label class="field-label">Primary Button Text</label>
+              <input type="text" class="field-input" id="h-cta1">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Secondary Button Text</label>
+              <input type="text" class="field-input" id="h-cta2">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">👥 Trust Row</div>
+          <div class="grid-2">
+            <div class="field-group">
+              <label class="field-label">Count Text (bold)</label>
+              <input type="text" class="field-input" id="h-trust-count" placeholder="50+ gym owners">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Following Text</label>
+              <input type="text" class="field-input" id="h-trust-text" placeholder="already growing with us">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📊 Floating Stat Cards (3 cards on desktop)</div>
+          <div class="grid-3">
+            <div>
+              <div class="field-group"><label class="field-label">Stat 1 — Number</label><input type="text" class="field-input" id="h-s1n" placeholder="2,500+"></div>
+              <div class="field-group"><label class="field-label">Stat 1 — Label</label><input type="text" class="field-input" id="h-s1l" placeholder="Leads Generated"></div>
+            </div>
+            <div>
+              <div class="field-group"><label class="field-label">Stat 2 — Number</label><input type="text" class="field-input" id="h-s2n" placeholder="₹4.2Cr"></div>
+              <div class="field-group"><label class="field-label">Stat 2 — Label</label><input type="text" class="field-input" id="h-s2l" placeholder="Revenue for Clients"></div>
+            </div>
+            <div>
+              <div class="field-group"><label class="field-label">Stat 3 — Number</label><input type="text" class="field-input" id="h-s3n" placeholder="8x"></div>
+              <div class="field-group"><label class="field-label">Stat 3 — Label</label><input type="text" class="field-input" id="h-s3l" placeholder="Average ROI"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PROBLEM ── -->
+      <div class="panel" id="panel-problem">
+        <div class="panel-header">
+          <div class="panel-title">Problem Section</div>
+          <div class="panel-desc">The "pain points" that resonate with gym owners.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">📝 Section Header</div>
+          <div class="grid-2">
+            <div class="field-group"><label class="field-label">Title</label><input type="text" class="field-input" id="p-title"></div>
+            <div class="field-group"><label class="field-label">Subtitle</label><input type="text" class="field-input" id="p-sub"></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Quote Text (use [red]...[/red] for red highlight)</label>
+            <textarea class="field-textarea" id="p-quote"></textarea>
+          </div>
+        </div>
+        <div class="section-break">Pain Cards</div>
+        <div id="pain-repeater"></div>
+      </div>
+
+      <!-- ── SOLUTION ── -->
+      <div class="panel" id="panel-solution">
+        <div class="panel-header">
+          <div class="panel-title">Solution / Steps</div>
+          <div class="panel-desc">Your process — shown as numbered steps.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">📝 Section Header</div>
+          <div class="grid-2">
+            <div class="field-group"><label class="field-label">Title</label><input type="text" class="field-input" id="sol-title"></div>
+            <div class="field-group"><label class="field-label">Subtitle</label><input type="text" class="field-input" id="sol-sub"></div>
+          </div>
+        </div>
+        <div class="section-break">Steps</div>
+        <div id="steps-repeater"></div>
+      </div>
+
+      <!-- ── FEATURES ── -->
+      <div class="panel" id="panel-features">
+        <div class="panel-header">
+          <div class="panel-title">Website Features</div>
+          <div class="panel-desc">Feature cards showcasing what the gym website includes.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">📝 Section Header</div>
+          <div class="grid-2">
+            <div class="field-group"><label class="field-label">Title</label><input type="text" class="field-input" id="f-title"></div>
+            <div class="field-group"><label class="field-label">Subtitle</label><input type="text" class="field-input" id="f-sub"></div>
+          </div>
+        </div>
+        <div class="section-break">Feature Cards</div>
+        <div id="feat-repeater"></div>
+      </div>
+
+      <!-- ── PACKAGES ── -->
+      <div class="panel" id="panel-packages">
+        <div class="panel-header">
+          <div class="panel-title">Pricing Packages</div>
+          <div class="panel-desc">Edit all three pricing tiers and their features.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">📝 Section Header</div>
+          <div class="grid-2">
+            <div class="field-group"><label class="field-label">Title</label><input type="text" class="field-input" id="pk-title"></div>
+            <div class="field-group"><label class="field-label">Subtitle</label><input type="text" class="field-input" id="pk-sub"></div>
+          </div>
+          <div class="grid-2">
+            <div class="field-group"><label class="field-label">CTA Note (bold)</label><input type="text" class="field-input" id="pk-cta-bold"></div>
+            <div class="field-group"><label class="field-label">CTA Note (regular)</label><input type="text" class="field-input" id="pk-cta-sub"></div>
+          </div>
+        </div>
+        <div class="pkg-tabs" id="pkg-tabs">
+          <div class="pkg-tab active" onclick="showPkg(0,this)">Package 1</div>
+          <div class="pkg-tab" onclick="showPkg(1,this)">Package 2</div>
+          <div class="pkg-tab" onclick="showPkg(2,this)">Package 3</div>
+        </div>
+        <div id="pkg-panels"></div>
+      </div>
+
+      <!-- ── RESULTS ── -->
+      <div class="panel" id="panel-results">
+        <div class="panel-header">
+          <div class="panel-title">Results Section</div>
+          <div class="panel-desc">Big numbers, lead cards, ranking table, and ROI breakdown.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">📝 Section Header</div>
+          <div class="grid-2">
+            <div class="field-group"><label class="field-label">Title</label><input type="text" class="field-input" id="r-title"></div>
+            <div class="field-group"><label class="field-label">Subtitle</label><input type="text" class="field-input" id="r-sub"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📈 Big Stats (4 numbers across the grid)</div>
+          <div class="grid-4">
+            <div><div class="field-group"><label class="field-label">Stat 1</label><input type="text" class="field-input" id="r-s1n"></div><div class="field-group"><label class="field-label">Label</label><input type="text" class="field-input" id="r-s1l"></div></div>
+            <div><div class="field-group"><label class="field-label">Stat 2</label><input type="text" class="field-input" id="r-s2n"></div><div class="field-group"><label class="field-label">Label</label><input type="text" class="field-input" id="r-s2l"></div></div>
+            <div><div class="field-group"><label class="field-label">Stat 3</label><input type="text" class="field-input" id="r-s3n"></div><div class="field-group"><label class="field-label">Label</label><input type="text" class="field-input" id="r-s3l"></div></div>
+            <div><div class="field-group"><label class="field-label">Stat 4</label><input type="text" class="field-input" id="r-s4n"></div><div class="field-group"><label class="field-label">Label</label><input type="text" class="field-input" id="r-s4l"></div></div>
+          </div>
+        </div>
+
+        <div class="section-break">Leads Card</div>
+        <div class="card">
+          <div class="card-title">🎯 Live Leads Card</div>
+          <div class="grid-2">
+            <div class="field-group"><label class="field-label">Card Header Title</label><input type="text" class="field-input" id="r-leads-title"></div>
+            <div class="field-group"><label class="field-label">Footer Note</label><input type="text" class="field-input" id="r-leads-footer"></div>
+          </div>
+        </div>
+        <div id="leads-repeater"></div>
+
+        <div class="section-break">Google Ranking Card</div>
+        <div class="card">
+          <div class="card-title">📍 Ranking Card</div>
+          <div class="grid-2">
+            <div class="field-group"><label class="field-label">Gym Name</label><input type="text" class="field-input" id="r-rank-gym"></div>
+            <div class="field-group"><label class="field-label">Footer Note (e.g. "results in 45 days")</label><input type="text" class="field-input" id="r-rank-footer"></div>
+          </div>
+        </div>
+        <div id="ranking-repeater"></div>
+
+        <div class="section-break">ROI Card</div>
+        <div class="card">
+          <div class="card-title">💰 ROI Breakdown Card</div>
+          <div class="field-group"><label class="field-label">Card Header Title</label><input type="text" class="field-input" id="r-roi-title"></div>
+        </div>
+        <div id="roi-repeater"></div>
+      </div>
+
+      <!-- ── TESTIMONIALS ── -->
+      <div class="panel" id="panel-testimonials">
+        <div class="panel-header">
+          <div class="panel-title">Testimonials</div>
+          <div class="panel-desc">Social proof — gym owner reviews.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">📝 Section Header</div>
+          <div class="grid-2">
+            <div class="field-group"><label class="field-label">Title</label><input type="text" class="field-input" id="t-title"></div>
+            <div class="field-group"><label class="field-label">Subtitle</label><input type="text" class="field-input" id="t-sub"></div>
+          </div>
+        </div>
+        <div class="section-break">Reviews</div>
+        <div id="testi-repeater"></div>
+      </div>
+
+      <!-- ── FAQ ── -->
+      <div class="panel" id="panel-faq">
+        <div class="panel-header">
+          <div class="panel-title">FAQ</div>
+          <div class="panel-desc">Frequently asked questions.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">📝 Section Header</div>
+          <div class="grid-2">
+            <div class="field-group"><label class="field-label">Title</label><input type="text" class="field-input" id="faq-title"></div>
+            <div class="field-group"><label class="field-label">Subtitle</label><input type="text" class="field-input" id="faq-sub"></div>
+          </div>
+        </div>
+        <div class="section-break">Questions</div>
+        <div id="faq-repeater"></div>
+      </div>
+
+      <!-- ── CTA + FOOTER ── -->
+      <div class="panel" id="panel-cta">
+        <div class="panel-header">
+          <div class="panel-title">CTA + Footer</div>
+          <div class="panel-desc">Final call-to-action section and footer bar.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">⚡ Final CTA Section</div>
+          <div class="field-group"><label class="field-label">Urgency Badge Text</label><input type="text" class="field-input" id="cta-badge"></div>
+          <div class="grid-2">
+            <div class="field-group">
+              <label class="field-label">Title (use [red]...[/red] for highlight)</label>
+              <textarea class="field-textarea" id="cta-title" style="min-height:70px;"></textarea>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Subtitle</label>
+              <textarea class="field-textarea" id="cta-sub" style="min-height:70px;"></textarea>
+            </div>
+          </div>
+          <div class="field-group"><label class="field-label">Offer Box Text (gold box)</label><input type="text" class="field-input" id="cta-offer"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🦶 Footer</div>
+          <div class="grid-2">
+            <div class="field-group"><label class="field-label">Footer Tagline</label><input type="text" class="field-input" id="ft-tagline"></div>
+            <div class="field-group"><label class="field-label">Copyright Text</label><input type="text" class="field-input" id="ft-copy"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end content -->
+  </div><!-- end app-body -->
+</div><!-- end app -->
+
+<!-- TOAST -->
+<div class="toast" id="toast">✅ Changes saved & synced to site!</div>
+
+<script>
+/* ============================================================
+   DEFAULT DATA
+   ============================================================ */
+const DEF = {
+  phone:'+919999999999', waNumber:'919999999999',
+  waMsg:"Hi! I want to grow my gym with GymGrowth Pro. Please tell me more.",
+  waTooltip:'Chat with us 💬',
+  ctaContactInfo:'📞 +91 99999 99999 \u00a0|\u00a0 💬 WhatsApp Available \u00a0|\u00a0 ⏰ Response within 1 hour',
+
+  heroBadge:'🏆 Trusted by 50+ Local Gym Owners Across India',
+  heroTitle:'Gym Owners,\nGet [red]30–100[/red]\nNew Membership\nEnquiries [red]Every Month[/red]',
+  heroSub:'We build you a professional website, run high-converting Meta & Google Ads, and rank your gym #1 on Google Maps — so your phone never stops ringing.',
+  heroCta1:'🎁 Get Free Demo Website', heroCta2:'📞 Book Free Strategy Call',
+  trustCount:'50+ gym owners', trustText:'already growing with us',
+  stat1num:'2,500+', stat1label:'Leads Generated',
+  stat2num:'₹4.2Cr', stat2label:'Revenue for Clients',
+  stat3num:'8x', stat3label:'Average ROI',
+
+  probTitle:"Why Your Gym Isn't Getting Enough Members",
+  probSub:"Most gym owners are incredible at fitness — but struggle with getting a steady flow of new members. Here's why:",
+  painQuote:'Your gym could be the best in the city,\nbut if [red]nobody finds you online,[/red]\nyour gym floor stays empty.',
+  painCards:[
+    {icon:'👻',title:'No Online Presence',desc:"You have no website or a basic one that doesn't generate leads. Potential members can't find you, so they go to your competitor."},
+    {icon:'📉',title:'Running Ads But No Leads',desc:"You've tried boosting posts on Facebook, but got zero serious enquiries. Generic ads reach the wrong people."},
+    {icon:'📍',title:'Invisible on Google Maps',desc:'When someone searches "gym near me," your competitor shows up on page 1 and you\'re buried on page 5.'},
+    {icon:'📱',title:'No Lead Follow-Up System',desc:"Even when you do get enquiries, they fall through the cracks because there's no automated follow-up in place."},
+    {icon:'🏆',title:'No Social Proof Online',desc:"You have amazing client transformations happening daily, but no one sees them because you're not showcasing them online."},
+    {icon:'💸',title:'Losing to Competitors',desc:"Newer gyms with better digital presence are attracting members that should be yours — just because they're more visible online."}
+  ],
+
+  solTitle:'The Complete Gym Growth System',
+  solSub:'We handle your entire digital presence — so you can focus on running your gym.',
+  steps:[
+    {title:'Free Demo Website',desc:"We build your free demo gym website in 48 hours — zero commitment, just so you can see what's possible."},
+    {title:'Launch High-Converting Ads',desc:'We create and launch targeted Meta & Google Ads that reach fitness-conscious people within 5km of your gym.'},
+    {title:'Dominate Google Maps',desc:'We optimize your Google Business Profile so you appear in the Top 3 for local gym searches in your city.'},
+    {title:'Leads Hit Your WhatsApp',desc:'Every enquiry from ads, Google, and your website is delivered instantly to your WhatsApp for fast follow-up.'},
+    {title:'Grow Month Over Month',desc:'Monthly performance reports, ongoing ad optimization, and SEO improvements that compound over time.'}
+  ],
+
+  featTitle:'Everything Your Gym Website Needs',
+  featSub:'Built from the ground up for gyms. Every feature designed to convert visitors into paying members.',
+  featCards:[
+    {icon:'🏠',title:'Modern Homepage',desc:'Stunning hero section, your USPs, social proof, and a clear call-to-action above the fold.'},
+    {icon:'💳',title:'Membership Pricing Table',desc:'Clear pricing cards for monthly, quarterly, and annual plans with highlighted best-value option.'},
+    {icon:'🏋️',title:'Trainer Profiles',desc:'Professional profiles for your trainers with certifications, specializations, and social links.'},
+    {icon:'📸',title:'Transformation Gallery',desc:'Before/after photos that build massive credibility and motivate prospects to enquire.'},
+    {icon:'📝',title:'Lead Capture Forms',desc:'Smart forms that collect name, number, and goal — sent directly to your WhatsApp or email.'},
+    {icon:'💬',title:'WhatsApp Button',desc:'Sticky WhatsApp button on every page for instant one-click contact from any device.'},
+    {icon:'📍',title:'Google Maps Integration',desc:'Embedded map showing your location, making it easy for nearby prospects to find and visit you.'},
+    {icon:'🔍',title:'SEO Optimized Structure',desc:'Technical SEO built in from day one — proper headings, schema markup, speed optimized, and mobile-first.'}
+  ],
+
+  pkgTitle:'Choose Your Growth Plan',
+  pkgSub:'All packages include a free demo website so you can see results before you commit.',
+  pkgCtaText:"Not sure which plan?",
+  pkgCtaSub:"Book a free 30-minute strategy call — we'll recommend the right plan based on your gym's goals and location.",
+  packages:[
+    {name:'Starter Package',tagline:'Perfect for new gyms getting started online',price:'9,999',period:'One-time setup + ₹3,999/mo',popular:false,popularLabel:'',features:'5-Page Professional Website\nMobile-Optimized Design\nGoogle Business Profile Setup\nWhatsApp & Call Integration\nLead Capture Form\nGoogle Maps Embedding\nBasic On-Page SEO',crossed:'Meta Ads Management\nGoogle Ads Management\nMonthly Reporting',btnText:'Get Started',btnStyle:'outline'},
+    {name:'Growth Package',tagline:'For gyms serious about consistent member growth',price:'19,999',period:'One-time setup + ₹7,999/mo',popular:true,popularLabel:'🔥 Most Popular',features:'8-Page Premium Website\nMobile-Optimized Design\nGoogle Business Profile + Ranking\nWhatsApp & Call Integration\nLead Capture System\nMeta Ads Management (FB + IG)\nGoogle Ads Management\nLocal SEO Optimization\nMonthly Performance Report\nDedicated Account Manager',crossed:'',btnText:'Get Started Now',btnStyle:'primary'},
+    {name:'Premium Package',tagline:'For established gyms wanting to dominate their city',price:'34,999',period:'One-time setup + ₹14,999/mo',popular:false,popularLabel:'',features:'12-Page Premium Website\nCustom Design + Animations\nGoogle Business Domination\nFull Meta Ads (FB + IG + Retargeting)\nFull Google Ads (Search + Display)\nAdvanced Local SEO\nTransformation Gallery Page\nTrainer Profile Pages\nWeekly Performance Reports\nPriority 24/7 WhatsApp Support',crossed:'',btnText:'Get Premium',btnStyle:'outline'}
+  ],
+
+  resTitle:'Real Results for Real Gyms',
+  resSub:'Numbers that prove our system works — across different cities, gym sizes, and budgets.',
+  resStat1num:'2,500+', resStat1label:'Total Leads Generated',
+  resStat2num:'₹4.2Cr', resStat2label:'Revenue Generated for Clients',
+  resStat3num:'50+', resStat3label:'Gyms Currently Growing',
+  resStat4num:'8x', resStat4label:'Average ROI on Ad Spend',
+  leadsTitle:'Live Leads — IronBody Gym, Pune',
+  leadsFooter:'📊 67 leads this month • Campaign active',
+  leadItems:[
+    {name:'Rahul M. ✅',detail:'Interested in: 3-Month Membership · 2 min ago'},
+    {name:'Priya S. ✅',detail:'Interested in: Weight Loss Program · 18 min ago'},
+    {name:'Arjun K. ✅',detail:'Interested in: Annual Membership · 45 min ago'},
+    {name:'Sneha R. ✅',detail:'Interested in: Personal Training · 1 hr ago'}
+  ],
+  rankingGym:'PowerFit Gym, Nashik',
+  rankingFooter:'⏱ Results achieved in 45 days',
+  rankingItems:[
+    {keyword:'Gym near me',change:'Page 5 → #1 ↑'},
+    {keyword:'Gym in Nashik',change:'Page 3 → #2 ↑'},
+    {keyword:'Fitness center Nashik',change:'Not ranked → #1 ↑'},
+    {keyword:'Best gym Nashik',change:'Page 2 → #3 ↑'}
+  ],
+  roiTitle:'ROI Breakdown — FlexZone Gym',
+  roiItems:[
+    {key:'Monthly Ad Budget',val:'₹15,000',green:false},
+    {key:'Leads Generated',val:'84 leads',green:false},
+    {key:'New Members Converted',val:'28 members',green:false},
+    {key:'Revenue from New Members',val:'₹1,68,000',green:true},
+    {key:'Return on Investment',val:'11.2x ROI 🎯',green:true}
+  ],
+
+  testiTitle:'What Gym Owners Are Saying',
+  testiSub:"Don't take our word for it — hear directly from gym owners who transformed their business.",
+  testimonials:[
+    {avatar:'💪',text:'"Before GymGrowth Pro, I was getting maybe 5-6 enquiries a month through word of mouth. Now my phone rings constantly. Last month we got 72 leads and converted 22 into paid members. The WhatsApp integration is genius — I follow up within seconds!"',name:'Vikram Singh',gym:'VikFit Gym • Mumbai',result:'📈 +22 members in Month 1'},
+    {avatar:'🏋️',text:'"I was skeptical about spending on digital marketing. But after the free demo website they built for me, I was completely convinced. Our Google Maps ranking went from page 4 to the top 3 in just 6 weeks. Now we\'re the #1 searched gym in our area!"',name:'Pooja Mehta',gym:'PowerZone Fitness • Pune',result:'📍 Ranked #1 on Google Maps'},
+    {avatar:'⚡',text:'"The Meta Ads they run are incredibly targeted. People from literally my neighborhood are joining based on the ads. The ROI is unbelievable — I spent ₹20,000 on ads and got back over ₹2 lakh in membership revenue that very month. Highly recommend!"',name:'Amit Sharma',gym:'IronEdge Gym • Nagpur',result:'💰 10x ROI on ad spend'}
+  ],
+
+  faqTitle:'Frequently Asked Questions',
+  faqSub:'Everything you need to know before getting started.',
+  faqs:[
+    {q:'How long does it take to start getting leads?',a:'Most of our clients start receiving leads within 7–14 days of campaign launch. Meta Ads typically generate the fastest results, often within 48-72 hours. Google Ads take 3-5 days to optimize. SEO results are seen within 30-60 days and keep growing over time.'},
+    {q:'Do you run ads targeting my local area only?',a:'Absolutely. All our ads are hyper-locally targeted to a radius of 3–8km around your gym (you choose). We target by location, age (18-45), fitness interests, and behaviors — ensuring your ad budget reaches only the most relevant potential members in your area.'},
+    {q:'Is the website mobile-friendly and fast?',a:'Yes! Every website we build is 100% mobile-first. Since 85% of gym searches happen on mobile, we optimize for fast loading (under 3 seconds), smooth animations, and a seamless user experience across all devices and screen sizes.'},
+    {q:'What kind of support do you provide?',a:'We provide dedicated WhatsApp support during business hours for all plans. Growth and Premium clients get a dedicated account manager for weekly updates, strategy sessions, and priority support. We\'re always just a message away.'},
+    {q:'What is the minimum ad budget required?',a:'We recommend a minimum ad budget of ₹10,000–₹15,000/month for Meta Ads and ₹8,000–₹12,000/month for Google Ads. This is separate from our management fees. Even with ₹10,000, our clients typically see 25-50 leads per month in medium-sized cities.'},
+    {q:'Do you offer a free demo before I commit?',a:'Yes! We build a free demo website for your gym so you can see exactly how it will look before making any decision. There is zero commitment required. We also offer a free 30-minute strategy call where we analyze your current online presence and show you the growth potential.'}
+  ],
+
+  ctaBadge:'Limited Offer — Only 10 Spots Available This Month',
+  ctaTitle:'Ready to Fill Your\nGym with [red]Members?[/red]',
+  ctaSub:"Don't let another month pass with an empty gym floor. Your competitors are already online — it's your turn.",
+  ctaOffer:'🎁 FREE Consultation + FREE Demo Website for First 10 Gym Owners This Month',
+  footerTagline:"India's #1 Digital Growth System for Gym Owners",
+  footerCopy:'© 2025 GymGrowthPro. All rights reserved.'
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const STORAGE_KEY = 'gymgrowth_admin_data';
+const PW = 'admin123';
+let D = {};
+
+function loadData() {
+  try { const s = localStorage.getItem(STORAGE_KEY); D = s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEF)); }
+  catch(e) { D = JSON.parse(JSON.stringify(DEF)); }
+}
+function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(D)); }
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  if (pw === PW) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    loadData();
+    buildAllRepeaters();
+    populateForms();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+  }
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function showPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+/* ============================================================
+   REPEATER BUILDER
+   ============================================================ */
+function makeRepeater(containerId, items, renderFn) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  items.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'repeater-item';
+    div.innerHTML = `
+      <div class="repeater-item-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="repeater-item-num">${String(i+1).padStart(2,'0')}</div>
+          <div class="repeater-item-label">${renderFn.label(item,i)}</div>
+        </div>
+      </div>
+      ${renderFn.fields(item, i)}`;
+    c.appendChild(div);
+  });
+}
+
+/* PAIN CARDS */
+const painRender = {
+  label: (item) => item.title || 'Pain Card',
+  fields: (item, i) => `
+    <div class="grid-2" style="margin-bottom:14px;">
+      <div class="field-group"><label class="field-label">Icon (emoji)</label><input type="text" class="field-input" id="pc-icon-${i}" value="${esc(item.icon)}"></div>
+      <div class="field-group"><label class="field-label">Title</label><input type="text" class="field-input" id="pc-title-${i}" value="${esc(item.title)}"></div>
+    </div>
+    <div class="field-group"><label class="field-label">Description</label><textarea class="field-textarea" id="pc-desc-${i}">${esc(item.desc)}</textarea></div>`
+};
+
+/* STEPS */
+const stepsRender = {
+  label: (item,i) => `Step ${i+1}: ${item.title||''}`,
+  fields: (item, i) => `
+    <div class="field-group"><label class="field-label">Step Title</label><input type="text" class="field-input" id="st-title-${i}" value="${esc(item.title)}"></div>
+    <div class="field-group"><label class="field-label">Description</label><textarea class="field-textarea" id="st-desc-${i}">${esc(item.desc)}</textarea></div>`
+};
+
+/* FEAT CARDS */
+const featRender = {
+  label: (item) => item.title || 'Feature',
+  fields: (item, i) => `
+    <div class="grid-2" style="margin-bottom:14px;">
+      <div class="field-group"><label class="field-label">Icon (emoji)</label><input type="text" class="field-input" id="fc-icon-${i}" value="${esc(item.icon)}"></div>
+      <div class="field-group"><label class="field-label">Title</label><input type="text" class="field-input" id="fc-title-${i}" value="${esc(item.title)}"></div>
+    </div>
+    <div class="field-group"><label class="field-label">Description</label><textarea class="field-textarea" id="fc-desc-${i}">${esc(item.desc)}</textarea></div>`
+};
+
+/* LEAD ITEMS */
+const leadsRender = {
+  label: (item) => item.name || 'Lead',
+  fields: (item, i) => `
+    <div class="grid-2">
+      <div class="field-group"><label class="field-label">Name</label><input type="text" class="field-input" id="li-name-${i}" value="${esc(item.name)}"></div>
+      <div class="field-group"><label class="field-label">Detail</label><input type="text" class="field-input" id="li-detail-${i}" value="${esc(item.detail)}"></div>
+    </div>`
+};
+
+/* RANKING ITEMS */
+const rankRender = {
+  label: (item) => item.keyword || 'Keyword',
+  fields: (item, i) => `
+    <div class="grid-2">
+      <div class="field-group"><label class="field-label">Keyword</label><input type="text" class="field-input" id="ri-kw-${i}" value="${esc(item.keyword)}"></div>
+      <div class="field-group"><label class="field-label">Result (Before → After)</label><input type="text" class="field-input" id="ri-change-${i}" value="${esc(item.change)}"></div>
+    </div>`
+};
+
+/* ROI ITEMS */
+const roiRender = {
+  label: (item) => item.key || 'Row',
+  fields: (item, i) => `
+    <div class="grid-2">
+      <div class="field-group"><label class="field-label">Label</label><input type="text" class="field-input" id="roi-key-${i}" value="${esc(item.key)}"></div>
+      <div class="field-group"><label class="field-label">Value</label><input type="text" class="field-input" id="roi-val-${i}" value="${esc(item.val)}"></div>
+    </div>
+    <div class="check-row">
+      <input type="checkbox" id="roi-green-${i}" ${item.green?'checked':''}>
+      <label for="roi-green-${i}">Highlight in green</label>
+    </div>`
+};
+
+/* TESTIMONIALS */
+const testiRender = {
+  label: (item) => item.name || 'Review',
+  fields: (item, i) => `
+    <div class="grid-2" style="margin-bottom:14px;">
+      <div class="field-group"><label class="field-label">Avatar Emoji</label><input type="text" class="field-input" id="ti-avatar-${i}" value="${esc(item.avatar)}"></div>
+      <div class="field-group"><label class="field-label">Name</label><input type="text" class="field-input" id="ti-name-${i}" value="${esc(item.name)}"></div>
+    </div>
+    <div class="grid-2" style="margin-bottom:14px;">
+      <div class="field-group"><label class="field-label">Gym & Location</label><input type="text" class="field-input" id="ti-gym-${i}" value="${esc(item.gym)}"></div>
+      <div class="field-group"><label class="field-label">Result Badge</label><input type="text" class="field-input" id="ti-result-${i}" value="${esc(item.result)}"></div>
+    </div>
+    <div class="field-group"><label class="field-label">Review Text</label><textarea class="field-textarea" id="ti-text-${i}">${esc(item.text)}</textarea></div>`
+};
+
+/* FAQ */
+const faqRender = {
+  label: (item) => item.q ? item.q.substring(0,40)+'...' : 'FAQ',
+  fields: (item, i) => `
+    <div class="field-group"><label class="field-label">Question</label><input type="text" class="field-input" id="fq-q-${i}" value="${esc(item.q)}"></div>
+    <div class="field-group"><label class="field-label">Answer</label><textarea class="field-textarea" id="fq-a-${i}">${esc(item.a)}</textarea></div>`
+};
+
+/* PACKAGES */
+function buildPkgPanels() {
+  const c = document.getElementById('pkg-panels');
+  c.innerHTML = D.packages.map((p, i) => `
+    <div class="pkg-panel${i===0?' active':''}" id="pkg-panel-${i}">
+      <div class="card">
+        <div class="card-title">Package ${i+1} Details</div>
+        <div class="grid-2">
+          <div class="field-group"><label class="field-label">Package Name</label><input type="text" class="field-input" id="pk-name-${i}" value="${esc(p.name)}"></div>
+          <div class="field-group"><label class="field-label">Tagline</label><input type="text" class="field-input" id="pk-tagline-${i}" value="${esc(p.tagline)}"></div>
+        </div>
+        <div class="grid-2">
+          <div class="field-group"><label class="field-label">Price (number only, e.g. 9,999)</label><input type="text" class="field-input" id="pk-price-${i}" value="${esc(p.price)}"></div>
+          <div class="field-group"><label class="field-label">Period Text</label><input type="text" class="field-input" id="pk-period-${i}" value="${esc(p.period)}"></div>
+        </div>
+        <div class="grid-2">
+          <div class="field-group"><label class="field-label">Button Text</label><input type="text" class="field-input" id="pk-btn-${i}" value="${esc(p.btnText)}"></div>
+          <div class="field-group"><label class="field-label">Popular Badge Label (blank = not popular)</label><input type="text" class="field-input" id="pk-poplabel-${i}" value="${esc(p.popularLabel||'')}"><div class="field-hint">e.g. 🔥 Most Popular</div></div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Included Features (one per line)</label>
+          <textarea class="field-textarea" id="pk-features-${i}" style="min-height:160px;">${esc(typeof p.features==='string'?p.features:(p.features||[]).join('\n'))}</textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Crossed-out / Not Included (one per line)</label>
+          <textarea class="field-textarea" id="pk-crossed-${i}">${esc(typeof p.crossed==='string'?p.crossed:(p.crossed||[]).join('\n'))}</textarea>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function showPkg(idx, el) {
+  document.querySelectorAll('.pkg-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.pkg-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('pkg-panel-'+idx).classList.add('active');
+  el.classList.add('active');
+}
+
+/* ============================================================
+   BUILD ALL REPEATERS
+   ============================================================ */
+function buildAllRepeaters() {
+  makeRepeater('pain-repeater', D.painCards, painRender);
+  makeRepeater('steps-repeater', D.steps, stepsRender);
+  makeRepeater('feat-repeater', D.featCards, featRender);
+  makeRepeater('leads-repeater', D.leadItems, leadsRender);
+  makeRepeater('ranking-repeater', D.rankingItems, rankRender);
+  makeRepeater('roi-repeater', D.roiItems, roiRender);
+  makeRepeater('testi-repeater', D.testimonials, testiRender);
+  makeRepeater('faq-repeater', D.faqs, faqRender);
+  buildPkgPanels();
+}
+
+/* ============================================================
+   POPULATE FORMS (from D → inputs)
+   ============================================================ */
+function set(id, val) { const el=document.getElementById(id); if(el) el.value=val||''; }
+
+function populateForms() {
+  // CONTACT
+  set('c-phone', D.phone); set('c-wa-num', D.waNumber);
+  set('c-wa-msg', D.waMsg); set('c-wa-tooltip', D.waTooltip);
+  set('c-info-line', D.ctaContactInfo);
+  // HERO
+  set('h-badge', D.heroBadge); set('h-title', D.heroTitle);
+  set('h-sub', D.heroSub); set('h-cta1', D.heroCta1); set('h-cta2', D.heroCta2);
+  set('h-trust-count', D.trustCount); set('h-trust-text', D.trustText);
+  set('h-s1n', D.stat1num); set('h-s1l', D.stat1label);
+  set('h-s2n', D.stat2num); set('h-s2l', D.stat2label);
+  set('h-s3n', D.stat3num); set('h-s3l', D.stat3label);
+  // PROBLEM
+  set('p-title', D.probTitle); set('p-sub', D.probSub); set('p-quote', D.painQuote);
+  // SOLUTION
+  set('sol-title', D.solTitle); set('sol-sub', D.solSub);
+  // FEATURES
+  set('f-title', D.featTitle); set('f-sub', D.featSub);
+  // PACKAGES
+  set('pk-title', D.pkgTitle); set('pk-sub', D.pkgSub);
+  set('pk-cta-bold', D.pkgCtaText); set('pk-cta-sub', D.pkgCtaSub);
+  // RESULTS
+  set('r-title', D.resTitle); set('r-sub', D.resSub);
+  set('r-s1n', D.resStat1num); set('r-s1l', D.resStat1label);
+  set('r-s2n', D.resStat2num); set('r-s2l', D.resStat2label);
+  set('r-s3n', D.resStat3num); set('r-s3l', D.resStat3label);
+  set('r-s4n', D.resStat4num); set('r-s4l', D.resStat4label);
+  set('r-leads-title', D.leadsTitle); set('r-leads-footer', D.leadsFooter);
+  set('r-rank-gym', D.rankingGym); set('r-rank-footer', D.rankingFooter);
+  set('r-roi-title', D.roiTitle);
+  // TESTIMONIALS
+  set('t-title', D.testiTitle); set('t-sub', D.testiSub);
+  // FAQ
+  set('faq-title', D.faqTitle); set('faq-sub', D.faqSub);
+  // CTA + FOOTER
+  set('cta-badge', D.ctaBadge); set('cta-title', D.ctaTitle);
+  set('cta-sub', D.ctaSub); set('cta-offer', D.ctaOffer);
+  set('ft-tagline', D.footerTagline); set('ft-copy', D.footerCopy);
+}
+
+/* ============================================================
+   COLLECT FORMS (inputs → D)
+   ============================================================ */
+function get(id) { const el=document.getElementById(id); return el?el.value:''; }
+function getCheck(id) { const el=document.getElementById(id); return el?el.checked:false; }
+
+function collectForms() {
+  D.phone=get('c-phone'); D.waNumber=get('c-wa-num');
+  D.waMsg=get('c-wa-msg'); D.waTooltip=get('c-wa-tooltip');
+  D.ctaContactInfo=get('c-info-line');
+
+  D.heroBadge=get('h-badge'); D.heroTitle=get('h-title');
+  D.heroSub=get('h-sub'); D.heroCta1=get('h-cta1'); D.heroCta2=get('h-cta2');
+  D.trustCount=get('h-trust-count'); D.trustText=get('h-trust-text');
+  D.stat1num=get('h-s1n'); D.stat1label=get('h-s1l');
+  D.stat2num=get('h-s2n'); D.stat2label=get('h-s2l');
+  D.stat3num=get('h-s3n'); D.stat3label=get('h-s3l');
+
+  D.probTitle=get('p-title'); D.probSub=get('p-sub'); D.painQuote=get('p-quote');
+  D.painCards = D.painCards.map((_,i) => ({
+    icon:get(`pc-icon-${i}`), title:get(`pc-title-${i}`), desc:get(`pc-desc-${i}`)
+  }));
+
+  D.solTitle=get('sol-title'); D.solSub=get('sol-sub');
+  D.steps = D.steps.map((_,i) => ({title:get(`st-title-${i}`), desc:get(`st-desc-${i}`)}));
+
+  D.featTitle=get('f-title'); D.featSub=get('f-sub');
+  D.featCards = D.featCards.map((_,i) => ({
+    icon:get(`fc-icon-${i}`), title:get(`fc-title-${i}`), desc:get(`fc-desc-${i}`)
+  }));
+
+  D.pkgTitle=get('pk-title'); D.pkgSub=get('pk-sub');
+  D.pkgCtaText=get('pk-cta-bold'); D.pkgCtaSub=get('pk-cta-sub');
+  D.packages = D.packages.map((p,i) => ({
+    ...p,
+    name:get(`pk-name-${i}`), tagline:get(`pk-tagline-${i}`),
+    price:get(`pk-price-${i}`), period:get(`pk-period-${i}`),
+    btnText:get(`pk-btn-${i}`),
+    popularLabel:get(`pk-poplabel-${i}`),
+    popular:!!get(`pk-poplabel-${i}`),
+    features:get(`pk-features-${i}`),
+    crossed:get(`pk-crossed-${i}`)
+  }));
+
+  D.resTitle=get('r-title'); D.resSub=get('r-sub');
+  D.resStat1num=get('r-s1n'); D.resStat1label=get('r-s1l');
+  D.resStat2num=get('r-s2n'); D.resStat2label=get('r-s2l');
+  D.resStat3num=get('r-s3n'); D.resStat3label=get('r-s3l');
+  D.resStat4num=get('r-s4n'); D.resStat4label=get('r-s4l');
+  D.leadsTitle=get('r-leads-title'); D.leadsFooter=get('r-leads-footer');
+  D.leadItems = D.leadItems.map((_,i) => ({name:get(`li-name-${i}`), detail:get(`li-detail-${i}`)}));
+  D.rankingGym=get('r-rank-gym'); D.rankingFooter=get('r-rank-footer');
+  D.rankingItems = D.rankingItems.map((_,i) => ({keyword:get(`ri-kw-${i}`), change:get(`ri-change-${i}`)}));
+  D.roiTitle=get('r-roi-title');
+  D.roiItems = D.roiItems.map((r,i) => ({key:get(`roi-key-${i}`), val:get(`roi-val-${i}`), green:getCheck(`roi-green-${i}`)}));
+
+  D.testiTitle=get('t-title'); D.testiSub=get('t-sub');
+  D.testimonials = D.testimonials.map((_,i) => ({
+    avatar:get(`ti-avatar-${i}`), name:get(`ti-name-${i}`),
+    gym:get(`ti-gym-${i}`), result:get(`ti-result-${i}`),
+    text:get(`ti-text-${i}`)
+  }));
+
+  D.faqTitle=get('faq-title'); D.faqSub=get('faq-sub');
+  D.faqs = D.faqs.map((_,i) => ({q:get(`fq-q-${i}`), a:get(`fq-a-${i}`)}));
+
+  D.ctaBadge=get('cta-badge'); D.ctaTitle=get('cta-title');
+  D.ctaSub=get('cta-sub'); D.ctaOffer=get('cta-offer');
+  D.footerTagline=get('ft-tagline'); D.footerCopy=get('ft-copy');
+}
+
+/* ============================================================
+   SAVE
+   ============================================================ */
+function saveAll() {
+  collectForms();
+  saveData();
+  showToast();
+  const btn = document.getElementById('main-save-btn');
+  btn.classList.add('success');
+  btn.innerHTML = '<span class="save-icon">✅</span> Saved!';
+  setTimeout(() => {
+    btn.classList.remove('success');
+    btn.innerHTML = '<span class="save-icon">💾</span> Save All Changes';
+  }, 2500);
+}
+
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+}
+
+// Keyboard shortcut: Ctrl/Cmd + S to save
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveAll(); }
+});
+</script>
+</body>
+</html>
